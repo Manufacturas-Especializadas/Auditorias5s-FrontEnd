@@ -1,15 +1,15 @@
 export const PreguntasProduccionLimpiezaData = [
     {
         id: 1,
-        texto: "La limpieza de la línea te permite detectar anormalidades, ejemplo, seguimiento al plan de producción, maquinas paradas, disponibildad de materiales, calidad, etc."
+        texto: "La limpieza de la línea te permite detectar anormalidades, por ejemplo, seguimiento al plan de producción, máquinas paradas, disponibilidad de materiales, calidad, etc."
     },
     {
         id: 2,
-        texto: "El equipo productivo (máquinas, mesas, racks) y area de trabajo (techo, paredes, piso-pasillos) estan libre de polvo y en buenas condiciones?"
+        texto: "El equipo productivo (máquinas, mesas, racks) y área de trabajo (techo, paredes, piso-pasillos) están libres de polvo y en buenas condiciones"
     },
     {
         id: 3,
-        texto: "Los artículos de limpieza se encuentran en su correspondiente gaveta y ordenados."
+        texto: "Los artículos de limpieza se encuentran en su correspondiente gaveta y están ordenados"
     },
     {
         id: 4,

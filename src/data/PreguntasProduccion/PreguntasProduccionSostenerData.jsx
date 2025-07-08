@@ -1,7 +1,7 @@
 export const PreguntasProduccionSostenerData = [
     {
         id: 1,
-        texto: "Se lleva a cabo el ckeck list de limpieza"
+        texto: "Se lleva a cabo el check list de limpieza"
     },
     {
         id: 2,
@@ -9,10 +9,10 @@ export const PreguntasProduccionSostenerData = [
     },
     {
         id: 3,
-        texto: "Información necesaria de las 5 S´s autorizada y publicada en el área de trabajo:  qué son las 5s, resultado de auditoria anterior, hoja de hallazgos?"
+        texto: "Información necesaria de las 5 S's autorizada y publicada en el área de trabajo: ¿qué son las 5S, resultado de auditoría anterior, hoja de hallazgos?"
     },
     {
         id: 4,
-        texto: "Se obtuvo mayor porcentaje de califiación que la anterior auditoria"
+        texto: "Se obtuvo un mayor porcentaje de calificación que en la anterior auditoría"
     }
-]
+];
