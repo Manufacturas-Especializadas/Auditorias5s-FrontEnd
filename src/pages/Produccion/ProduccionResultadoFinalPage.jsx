@@ -2,6 +2,7 @@ import { useContext, useEffect } from "react";
 import AuditoriaContext from "../../context/AuditoriaContext";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import config from "../../../config";
 
 const ProduccionResultadoFinalPage = () => {
     const { auditorData, respuestasSecciones, setRespuestasSecciones } = useContext(AuditoriaContext);
@@ -100,7 +101,7 @@ const ProduccionResultadoFinalPage = () => {
         };
     
         try {
-            const response = await fetch("https://localhost:44343/api/Audits/Register", {
+            const response = await fetch(`${config}/Audits/Register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
