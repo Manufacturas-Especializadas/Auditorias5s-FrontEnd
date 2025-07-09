@@ -92,8 +92,6 @@ const ProduccionResultadoFinalPage = () => {
     const sendDataToBackend = async () => {
         const answers = getResponsesToSend();
 
-        console.log("Respuestas a enviar:", answers);
-
         if(!validateAllAnswered(answers)){
             return;
         };
@@ -123,7 +121,6 @@ const ProduccionResultadoFinalPage = () => {
                 formData.append('Photo', photo);
             }
             
-            console.log("Datos a enviar:");
             for (let [key, value] of formData.entries()) {
                 console.log(key, value instanceof File ? value.name : value);
             }
