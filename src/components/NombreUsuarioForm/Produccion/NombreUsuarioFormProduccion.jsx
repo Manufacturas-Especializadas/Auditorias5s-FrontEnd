@@ -15,7 +15,19 @@ const NombreUsuarioForm = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if(responsible.trim() && area.trim()){
-            setAuditorData({ responsible, area });
+            setAuditorData(prev => ({
+                ...prev,
+                responsible,
+                area
+            }));
+
+            localStorage.setItem("auditoriaData", JSON.stringify({
+                responsible,
+                area,
+                description: "",
+                photos: []
+            }));
+
             handleNavigate("/categorias-auditoria-produccion-seleccion");
         }
     };
