@@ -1,16 +1,17 @@
 import { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PreguntasProduccionSostenerData } from "../../data/PreguntasProduccion/PreguntasProduccionSostenerData";
+import { savePhotos, getPhoto } from "../../services/photoStorage";
 import AuditoriaContext from "../../context/AuditoriaContext";
 
 const ProduccionSostenerFormPage = () => {
-    const { respuestasSecciones, setRespuestasSecciones }  = useContext(AuditoriaContext);
-
-    const [respuestas, setRespuestas] = useState(respuestasSecciones.sostener || {});
-
+    const{ respuestasSecciones, setRespuestasSecciones, auditorData, setAuditorData }  = useContext(AuditoriaContext);
+    const[respuestas, setRespuestas] = useState(respuestasSecciones.sostener || {});
     const[mostrarHallazgos, setMostrarHallazgos] = useState(false);
     const[hallazgos, setHallazgos] = useState("");
     const[fotos, setFotos] = useState([]);
+    const[previews, setPreviews] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
 
     const navigate = useNavigate();
 
@@ -25,10 +26,38 @@ const ProduccionSostenerFormPage = () => {
         }));
     };
 
-    const handleFileChange = (e) => {
-        if (e.target.files) {
-            const filesArray = Array.from(e.target.files);
-            setFotos(prev => [...prev, ...filesArray]);
+    const handleFileChange = async (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setIsUploading(true);
+            try {
+                const newFiles = Array.from(e.target.files);
+                                
+                const newPhotoRefs = await savePhotos(newFiles);
+                
+                const updatedData = {
+                    ...auditorData,
+                    photoRefs: [...(auditorData.photoRefs || []), ...newPhotoRefs]
+                };
+                
+                setAuditorData(updatedData);
+                localStorage.setItem('auditoriaData', JSON.stringify(updatedData));
+                
+                setFotos(prev => [...prev, ...newFiles]);
+                setPreviews(prev => [
+                    ...prev, 
+                    ...newFiles.map(file => URL.createObjectURL(file))
+                ]);
+                
+            } catch (error) {
+                console.error("Error al guardar fotos:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al subir fotos',
+                    text: 'No se pudieron guardar las fotos seleccionadas'
+                });
+            }finally{
+                setIsUploading(false);
+            }            
         }
     };
 
@@ -41,12 +70,44 @@ const ProduccionSostenerFormPage = () => {
             ...respuestasSecciones,
             sostener: respuestas
         };
-    
+        
+        setAuditorData(prev => ({
+            ...prev,
+            description: hallazgos || ""
+        }));
+        
         setRespuestasSecciones(nuevasRespuestas);
+        
+        localStorage.setItem('auditoriaData', JSON.stringify({
+            ...auditorData,
+            description: hallazgos || "",
+            photos: fotos || []
+        }));
         localStorage.setItem("auditoriaRespuestas", JSON.stringify(nuevasRespuestas));
-
+        
         handleNavigate("/categorias-auditoria-produccion-resultado");
     };
+
+    useEffect(() => {
+        const loadPreviews = async () => {
+            if (auditorData.photoRefs?.length > 0) {
+                const loadedPreviews = await Promise.all(
+                    auditorData.photoRefs.map(async (ref) => {
+                        const photo = await getPhoto(ref.id);
+                        return URL.createObjectURL(photo);
+                    })
+                );
+                setPreviews(loadedPreviews);
+            }
+        };
+        loadPreviews();
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            previews.forEach(preview => URL.revokeObjectURL(preview));
+        };
+    }, [previews]);    
 
     return (
         <>
@@ -128,7 +189,7 @@ const ProduccionSostenerFormPage = () => {
                                     <>
                                         <div>
                                             <label htmlFor="hallazgos" className="block text-sm font-medium text-gray-700 mb-1">
-                                                Descripción de hallazgos
+                                                Descripción de hallazgos (opcional)
                                             </label>
                                             <textarea
                                                 id="hallazgos"
@@ -144,7 +205,7 @@ const ProduccionSostenerFormPage = () => {
                                     
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Evidencia fotográfica
+                                                Evidencia fotográfica (opcional)
                                             </label>
 
                                             {
