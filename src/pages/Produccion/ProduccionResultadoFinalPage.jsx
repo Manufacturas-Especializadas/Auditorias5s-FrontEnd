@@ -1,11 +1,12 @@
 import { useContext, useEffect } from "react";
-import AuditoriaContext from "../../context/AuditoriaContext";
 import { useNavigate } from "react-router-dom";
+import { getPhoto } from "../../services/photoStorage";
+import AuditoriaContext from "../../context/AuditoriaContext";
 import Swal from "sweetalert2";
 import config from "../../../config";
 
 const ProduccionResultadoFinalPage = () => {
-    const { auditorData, respuestasSecciones, setRespuestasSecciones } = useContext(AuditoriaContext);
+    const { clearAllData,auditorData, setAuditorData, respuestasSecciones, setRespuestasSecciones } = useContext(AuditoriaContext);
     const navigate = useNavigate();
 
     const calcularCalificacion = (respuestas) => {
@@ -44,9 +45,9 @@ const ProduccionResultadoFinalPage = () => {
         const answers = [];
     
         const processSection = (section, startId) => {
-            return Object.entries(section).map(([_, score], i) => ({
-                idQuestion: startId + i,
-                score
+            return Object.entries(section).map(([key, score], i) => ({
+                IdQuestion: startId + i,
+                score: parseInt(score)
             }));
         };
     
@@ -61,92 +62,138 @@ const ProduccionResultadoFinalPage = () => {
     
 
     const validateAllAnswered = (answers) => {
-        const maxIdQuestion = 22;
-        const preguntasFaltantes = [];
-    
-        for (let i = 1; i <= maxIdQuestion; i++) {
-            const found = answers.find(a => a.idQuestion === i && typeof a.score === "number" && a.score >= 1 && a.score <= 5);
-            if (!found) {
-                preguntasFaltantes.push(i);
-            }
+        if (!auditorData.responsible || !auditorData.area) {
+            Swal.fire(/* ... */);
+            return false;
         }
     
-        if (preguntasFaltantes.length > 0) {
+        const idsEsperados = Array.from({length: 22}, (_, i) => i + 1); 
+
+        const idsRespondidos = new Set(answers.map(a => a.IdQuestion));
+        const faltantes = idsEsperados.filter(id => !idsRespondidos.has(id));
+    
+        if (faltantes.length > 0) {
             Swal.fire({
                 icon: "warning",
-                title: "Faltan respuestas",
-                html: `Estas preguntas no fueron contestadas correctamente: <b>${preguntasFaltantes.join(", ")}</b>`
+                title: "Preguntas faltantes",
+                html: `Faltan las preguntas: <b>${faltantes.join(', ')}</b>`
             });
-    
+            return false;
+        }
+
+        if (answers.some(a => a.score < 1 || a.score > 5)) {
+            Swal.fire(/* ... */);
             return false;
         }
     
         return true;
-    };    
-    
+    };
 
     const sendDataToBackend = async () => {
         const answers = getResponsesToSend();
-    
-        if (!validateAllAnswered(answers)) {
+
+        console.log("Respuestas a enviar:", answers);
+
+        if(!validateAllAnswered(answers)){
             return;
-        };        
-    
-        const payload = {
-            responsible: auditorData.responsible,
-            area: auditorData.area,
-            description: "",
-            idForm: 1,
-            answers: answers
         };
-    
-        try {
-            const response = await fetch(`${config}/Audits/Register`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
+
+        try{
+            Swal.fire({
+                title: "Guardando...",
+                html: "Por favor espera mientras se guarda",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
-    
+
+            const formData = new FormData();
+            formData.append('responsible', auditorData.responsible);
+            formData.append('area', auditorData.area);
+            formData.append('description', auditorData.description || "");
+            formData.append('idForm', '1');
+            answers.forEach((answer, index) => {
+                formData.append(`Answers[${index}].IdQuestion`, answer.IdQuestion.toString());
+                formData.append(`Answers[${index}].score`, answer.score.toString());
+            });
+
+            if (auditorData.photoRefs?.length > 0) {
+                const photo = await getPhoto(auditorData.photoRefs[0].id);
+                formData.append('Photo', photo);
+            }
+            
+            console.log("Datos a enviar:");
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value instanceof File ? value.name : value);
+            }
+
+            const response = await fetch(`${config.apiUrl}/Audits/Register`, {
+                method: "POST",
+                body: formData
+            });
+
+            Swal.close();
             if (response.ok) {
+                await clearAllData();
+            }
+
+            if(response.ok){
                 localStorage.removeItem("auditoriaRespuestas");
                 Swal.fire({
                     icon: "success",
                     title: "Auditoría guardada",
-                    text: "Los resultados han sido registrados exitosamente.",
+                    text: "Los resultados han sidos registrados exitosamente",
                     timer: 2000,
                     showConfirmButton: false
+                }).then(() => {
+                    setAuditorData({
+                        responsible: "",
+                        area: "",
+                        description: "",
+                        photoRefs: []
+                    });
+                    setRespuestasSecciones({
+                        seleccion: {},
+                        orden: {},
+                        limpieza: {},
+                        estandar: {},
+                        sostener: {}
+                    });
+                    handleNavigate("/");
                 });
-                navigate("/");
-            } else {
+            }else{
                 const errorData = await response.json();
-                console.error("Error del servidor:", errorData);
+                console.error("Error del servidor", errorData);
                 Swal.fire({
                     icon: "error",
                     title: "Hubo un error",
-                    text: "No se pudo guardar la auditoría."
+                    text: "No se pudo guardar la auditoría"
                 });
             }
-        } catch (error) {
-            console.error("Error al enviar datos:", error);
+        }catch(error){
+            console.error("Error al enviar datos: ", error);
             Swal.fire({
                 icon: "error",
                 title: "Error de conexión",
-                text: "Hubo un problema al enviar los datos."
+                text: "Hubo un problema al enviar los datos"
             });
         }
     };
 
     useEffect(() => {
-        const saved = localStorage.getItem("auditoriaRespuestas");
-    
-        if (saved && Object.values(respuestasSecciones).every(section => Object.keys(section).length === 0)) {
+        const savedData = localStorage.getItem('auditoriaData');
+        const savedRespuestas = localStorage.getItem("auditoriaRespuestas");
+
+        if (savedData) {
+            setAuditorData(JSON.parse(savedData));
+        }
+        
+        if (savedRespuestas && Object.values(respuestasSecciones).every(section => Object.keys(section).length === 0)) {
             try {
-                const parsed = JSON.parse(saved);
-                setRespuestasSecciones(parsed);
+                setRespuestasSecciones(JSON.parse(savedRespuestas));
             } catch (error) {
-                console.error("Error al parsear localStorage:", error);
+                console.error("Error al parsear respuestas:", error);
             }
         }
     }, []);
