@@ -121,9 +121,9 @@ const ProduccionResultadoFinalPage = () => {
                 formData.append('Photo', photo);
             }
             
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value instanceof File ? value.name : value);
-            }
+            // for (let [key, value] of formData.entries()) {
+            //     console.log(key, value instanceof File ? value.name : value);
+            // }
 
             const response = await fetch(`${config.apiUrl}/Audits/Register`, {
                 method: "POST",
