@@ -9,6 +9,7 @@ import ProduccionEstandarFormPage from "../pages/Produccion/ProduccionEstandarFo
 import ProduccionSostenerFormPage from "../pages/Produccion/ProduccionSostenerFormPage";
 import HomePage from "../pages/Home/HomePage";
 import ProduccionResultadoFinalPage from "../pages/Produccion/ProduccionResultadoFinalPage";
+import AdminIndex from "../pages/Admin/AdminIndex";
 
 const MyRoutes = () => {
     return (
@@ -24,6 +25,9 @@ const MyRoutes = () => {
                 <Route path="/categorias-auditoria-produccion-estandar" element={<ProduccionEstandarFormPage/>}/>
                 <Route path="/categorias-auditoria-produccion-sostener" element={<ProduccionSostenerFormPage/>}/>
                 <Route path="/categorias-auditoria-produccion-resultado" element={<ProduccionResultadoFinalPage/>}/>
+
+                {/* Administrador */}
+                <Route path="/administrador" element={<AdminIndex/>}/>
             </Routes>
         </>
     )
