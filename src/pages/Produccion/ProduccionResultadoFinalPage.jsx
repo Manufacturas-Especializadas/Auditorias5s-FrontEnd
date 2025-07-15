@@ -4,45 +4,54 @@ import { getPhoto } from "../../services/photoStorage";
 import AuditoriaContext from "../../context/AuditoriaContext";
 import Swal from "sweetalert2";
 import config from "../../../config";
+import ScoreCard from "../../components/ScoreCard/ScoreCard";
+import FinalScore from "../../components/FinalScore/FinalScore";
 
 const ProduccionResultadoFinalPage = () => {
-    const { clearAllData,auditorData, setAuditorData, respuestasSecciones, setRespuestasSecciones } = useContext(AuditoriaContext);
+    const { 
+        auditState,
+        AUDIT_TYPES,
+        setAuditType,
+        clearAllData
+    } = useContext(AuditoriaContext);
+    
+    const { auditorData, respuestasSecciones } = auditState[AUDIT_TYPES.PRODUCCION] || {
+        auditorData: {},
+        respuestasSecciones: {
+            seleccion: {},
+            orden: {},
+            limpieza: {},
+            estandar: {},
+            sostener: {}
+        }
+    };
+
     const navigate = useNavigate();
 
+    useEffect(() => {
+        setAuditType(AUDIT_TYPES.PRODUCCION);
+        
+        console.log("Datos completos:", auditState);
+        console.log("Datos de periféricos:", auditState[AUDIT_TYPES.PRODUCCION]);
+    }, [setAuditType]);
+
+
     const calcularCalificacion = (respuestas) => {
-        return Object.values(respuestas).reduce((sum, val) => sum + val * 0.2, 0);
+        return Object.values(respuestas).reduce((sum, val) => sum + (val || 0) * 0.2, 0);
     };
 
     const califSeleccion = calcularCalificacion(respuestasSecciones.seleccion);
     const califOrden = calcularCalificacion(respuestasSecciones.orden);
     const califLimpieza = calcularCalificacion(respuestasSecciones.limpieza);
     const califEstandar = calcularCalificacion(respuestasSecciones.estandar);
-    const califSostender = calcularCalificacion(respuestasSecciones.sostener);
+    const califSostener = calcularCalificacion(respuestasSecciones.sostener);
 
-    const resultadoFinal = (califSeleccion + califOrden + califLimpieza + califEstandar + califSostender) * 0.2;
-
-    const getColorClass = (score) => {
-        if(score >= 5) return "bg-green-100 text-green-800";
-        if(score >= 4) return "bg-blue-100 text-blue-800";
-        if(score >= 2) return "bg-yellow-100 text-yellow-800";
-
-        return "bg-red-100 text-red-800";
-    };
-
-    const getIcon = (score) => {
-        if(score >= 5) return "👍";
-        if(score >= 4) return "👌";
-        if(score >= 2) return "⚠️";
-
-        return "❌";
-    };
-
-    const handleNavigate = (path) => {
-        navigate(path);
-    };
+    const resultadoFinal = (califSeleccion + califOrden + califLimpieza + califEstandar + califSostener) * 0.2;
 
     const getResponsesToSend = () => {
         const answers = [];
+        console.log("Estado global de respuestas:", respuestasSecciones);
+
     
         const processSection = (section, startId) => {
             return Object.entries(section).map(([key, score], i) => ({
@@ -59,141 +68,87 @@ const ProduccionResultadoFinalPage = () => {
     
         return answers;
     };
-    
 
     const validateAllAnswered = (answers) => {
         if (!auditorData.responsible || !auditorData.area) {
-            Swal.fire(/* ... */);
-            return false;
-        }
-    
-        const idsEsperados = Array.from({length: 22}, (_, i) => i + 1); 
-
-        const idsRespondidos = new Set(answers.map(a => a.IdQuestion));
-        const faltantes = idsEsperados.filter(id => !idsRespondidos.has(id));
-    
-        if (faltantes.length > 0) {
             Swal.fire({
-                icon: "warning",
-                title: "Preguntas faltantes",
-                html: `Faltan las preguntas: <b>${faltantes.join(', ')}</b>`
+                icon: 'error',
+                title: 'Datos incompletos',
+                text: 'Nombre del auditor y área son campos obligatorios'
             });
             return false;
         }
 
-        if (answers.some(a => a.score < 1 || a.score > 5)) {
-            Swal.fire(/* ... */);
+        const invalidAnswers = answers.filter(a => a.score < 1 || a.score > 5);
+        
+        if (invalidAnswers.length > 0) {
+            Swal.fire({
+                icon: "error",
+                title: "Puntuaciones inválidas",
+                text: `Hay ${invalidAnswers.length} respuestas fuera del rango 1-5`
+            });
             return false;
         }
-    
+
         return true;
     };
 
     const sendDataToBackend = async () => {
         const answers = getResponsesToSend();
 
-        if(!validateAllAnswered(answers)){
-            return;
-        };
+        console.log("Answers a enviar:", answers);
+        if(!validateAllAnswered(answers)) return;
 
-        try{
-            Swal.fire({
+        try {
+            const swalInstance = Swal.fire({
                 title: "Guardando...",
-                html: "Por favor espera mientras se guarda",
                 allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                didOpen: () => Swal.showLoading()
             });
 
             const formData = new FormData();
-            formData.append('responsible', auditorData.responsible);
-            formData.append('area', auditorData.area);
-            formData.append('description', auditorData.description || "");
-            formData.append('idForm', '1');
-            answers.forEach((answer, index) => {
-                formData.append(`Answers[${index}].IdQuestion`, answer.IdQuestion.toString());
-                formData.append(`Answers[${index}].score`, answer.score.toString());
-            });
+            formData.append('Responsible', auditorData.responsible);
+            formData.append('Area', auditorData.area);
+            formData.append('Description', auditorData.description || "");
+            formData.append('IdForm', '1');
+            
+            formData.append('Answers', JSON.stringify(answers));
 
             if (auditorData.photoRefs?.length > 0) {
                 const photo = await getPhoto(auditorData.photoRefs[0].id);
                 formData.append('Photo', photo);
             }
-            
-            // for (let [key, value] of formData.entries()) {
-            //     console.log(key, value instanceof File ? value.name : value);
-            // }
 
             const response = await fetch(`${config.apiUrl}/Audits/Register`, {
                 method: "POST",
                 body: formData
             });
 
-            Swal.close();
-            if (response.ok) {
-                await clearAllData();
-            }
+            if (!response.ok) throw new Error(await response.text());
 
-            if(response.ok){
-                localStorage.removeItem("auditoriaRespuestas");
-                Swal.fire({
-                    icon: "success",
-                    title: "Auditoría guardada",
-                    text: "Los resultados han sidos registrados exitosamente",
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    setAuditorData({
-                        responsible: "",
-                        area: "",
-                        description: "",
-                        photoRefs: []
-                    });
-                    setRespuestasSecciones({
-                        seleccion: {},
-                        orden: {},
-                        limpieza: {},
-                        estandar: {},
-                        sostener: {}
-                    });
-                    handleNavigate("/");
-                });
-            }else{
-                const errorData = await response.json();
-                console.error("Error del servidor", errorData);
-                Swal.fire({
-                    icon: "error",
-                    title: "Hubo un error",
-                    text: "No se pudo guardar la auditoría"
-                });
-            }
-        }catch(error){
-            console.error("Error al enviar datos: ", error);
+            await clearAllData();
+            await swalInstance.close();
+            
+            Swal.fire({
+                icon: "success",
+                title: "¡Auditoría guardada!",
+                text: "Los resultados se registraron correctamente",
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => navigate("/"));
+            
+        } catch (error) {
             Swal.fire({
                 icon: "error",
-                title: "Error de conexión",
-                text: "Hubo un problema al enviar los datos"
+                title: "Error",
+                text: error.message || "Ocurrió un error al guardar"
             });
         }
     };
 
-    useEffect(() => {
-        const savedData = localStorage.getItem('auditoriaData');
-        const savedRespuestas = localStorage.getItem("auditoriaRespuestas");
-
-        if (savedData) {
-            setAuditorData(JSON.parse(savedData));
-        }
-        
-        if (savedRespuestas && Object.values(respuestasSecciones).every(section => Object.keys(section).length === 0)) {
-            try {
-                setRespuestasSecciones(JSON.parse(savedRespuestas));
-            } catch (error) {
-                console.error("Error al parsear respuestas:", error);
-            }
-        }
-    }, []);
+    const handleBack = () => {
+        navigate("/categorias-auditoria-produccion-sostener");
+    };
 
     return (
         <>
@@ -211,159 +166,58 @@ const ProduccionResultadoFinalPage = () => {
                     <div className="bg-white shadow-xl rounded-b-xl overflow-hidden divide-y divide-gray-200">
                         <div className="p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Tarjeta de selección */}
-                                <div className={`p-4 rounded-lg ${getColorClass(califSeleccion)} border-l-4 ${califSeleccion >= 5 ? "border-green-500": 
-                                    califSeleccion >= 4 ? "border-blue-500" : califSeleccion >= 2 ? "border-yellow-500" : "border-red-500"}`}
+                                <ScoreCard
+                                    titulo="Selección"
+                                    puntuacion={ califSeleccion }
+                                />
+
+                                <ScoreCard
+                                    titulo="Orden"
+                                    puntuacion={ califOrden }
+                                />
+
+                                <ScoreCard
+                                    titulo="Limpieza"
+                                    puntuacion={ califLimpieza }
+                                />
+
+                                <ScoreCard
+                                    titulo="Estandar"
+                                    puntuacion={ califEstandar }
+                                />
+
+                                <ScoreCard
+                                    titulo="Sostener"
+                                    puntuacion={ califSostener }
+                                />
+
+                                <FinalScore
+                                    puntuacion={ resultadoFinal }
+                                />
+                            </div>
+                        </div>
+                        <div className="flex justify-between gap-">                                
+                            <div className="bg-gray-50 px-6 py-4 flex justify-center border-t border-gray-200">
+                                <button
+                                    onClick={ handleBack }
+                                    className="items-center px-3 py-1 border border-transparent text-base
+                                        font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700
+                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 hover:cursor-pointer
+                                        me-2
+                                    "
                                 >
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="font-semibold">
-                                            Selección
-                                        </h3>
-                                        <span className="text-2xl">{ getIcon(califSeleccion) }</span>
-                                    </div>
-                                    <div className="mt-2 flex items-center justify-between">
-                                        <span className="text-3xl font-bold">
-                                            { califSeleccion.toFixed(1) }
-                                        </span>
-                                        <div className="w-full max-w-xs ml-4">
-                                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full ${califSeleccion >= 5 ? "bg-green-500" : califSeleccion >= 4 ? "bg-blue-500" : 
-                                                        califSeleccion >= 2 ? "bg-yellow-500" : "bg-red-500"}`}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Tarjeta de orden */}
-                                <div className={`p-4 rounded-lg ${getColorClass(califOrden)} border-l-4 ${califOrden >= 5 ? "border-green-500" : 
-                                    califOrden >= 4 ? "border-blue-500" : califOrden >= 2 ? "border-yellow-500" : "border-red-500"}`}>
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="font-semibold">Orden</h3>
-                                        <span className="text-2xl">{ getIcon(califOrden) }</span>
-                                    </div>
-                                    <div className="mt-2 flex items-center justify-between">
-                                        <span className="text-3xl font-bold">
-                                            { califOrden.toFixed(1) }
-                                        </span>
-                                        <div className="w-full max-w-xs ml-4">
-                                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full ${califOrden >= 5 ? "bg-green-500" : 
-                                                        califOrden  >= 4 ? "bg-blue-500" : califOrden >= 2 ? "bg-yellow-500" : "bg-red-500"}`}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={`p-4 rounded-lg ${getColorClass(califLimpieza)} border-l-4 ${califLimpieza >= 5 ? "border-green-500" : 
-                                    califLimpieza >= 4 ? "border-blue-500" : califLimpieza >= 2 ? "border-yellow-500" : "border-red-500"}`}>
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="font-semibold">Limpieza</h3>
-                                        <span className="text-2xl">{ getIcon(califLimpieza) }</span>
-                                    </div>
-                                    <div className="mt-2 flex items-center justify-between">
-                                        <span className="text-3xl font-bold">
-                                            { califLimpieza.toFixed(1) }
-                                        </span>
-                                        <div className="w-full max-w-xs ml-4">
-                                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full ${califLimpieza >= 5 ? "bg-green-500" : 
-                                                        califLimpieza  >= 4 ? "bg-blue-500" : califLimpieza >= 2 ? "bg-yellow-500" : "bg-red-500"}`}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={`p-4 rounded-lg ${getColorClass(califEstandar)} border-l-4 ${califEstandar >= 5 ? "border-green-500" : 
-                                    califEstandar >= 4 ? "border-blue-500" : califEstandar >= 2 ? "border-yellow-500" : "border-red-500"}`}>
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="font-semibold">Estandar</h3>
-                                        <span className="text-2xl">{ getIcon(califEstandar) }</span>
-                                    </div>
-                                    <div className="mt-2 flex items-center justify-between">
-                                        <span className="text-3xl font-bold">
-                                            { califEstandar.toFixed(1) }
-                                        </span>
-                                        <div className="w-full max-w-xs ml-4">
-                                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full ${califEstandar >= 5 ? "bg-green-500" : 
-                                                        califEstandar  >= 4 ? "bg-blue-500" : califEstandar >= 2 ? "bg-yellow-500" : "bg-red-500"}`}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={`p-4 rounded-lg ${getColorClass(califSostender)} border-l-4 ${califSostender >= 5 ? "border-green-500" : 
-                                    califSostender >= 4? "border-blue-500" : califSostender >= 2 ? "border-yellow-500" : "border-red-500"}`}>
-                                    <div className="flex justify-between items-center">
-                                        <h3 className="font-semibold">Sostener</h3>
-                                        <span className="text-2xl">{ getIcon(califSostender) }</span>
-                                    </div>
-                                    <div className="mt-2 flex items-center justify-between">
-                                        <span className="text-3xl font-bold">
-                                            { califSostender.toFixed(1) }
-                                        </span>
-                                        <div className="w-full max-w-xs ml-4">
-                                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full ${califSostender >= 5 ? "bg-green-500" : 
-                                                        califSostender  >= 4 ? "bg-blue-500" : califSostender >= 2 ? "bg-yellow-500" : "bg-red-500"}`}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    Volver
+                                </button>
                                 
-                                <div className="p-6 bg-gray-50">
-                                    <div className="flex flex-col items-center">
-                                        <h3 className="text-lg font-medium text-gray-500 mb-2">
-                                            Calificación final
-                                        </h3>
-                                        <div className={`text-5xl font-bold rounded-full h-32 w-32 flex items-center justify-center shadow-inner 
-                                            ${resultadoFinal >= 5 ? 'bg-green-500 text-white' : 
-                                                resultadoFinal >= 4 ? 'bg-blue-500 text-white' : 
-                                                resultadoFinal >= 2 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'}`}>
-                                            { resultadoFinal.toFixed(1) }
-                                        </div>
-                                        <p className="mt-4 text-lg font-medium text-gray-700">
-                                            {resultadoFinal >= 5 ? 'Excelente - Cumple con todos los estándares' :
-                                                resultadoFinal >= 4 ? 'Bueno - Cumple con la mayoría de estándares' :
-                                                resultadoFinal >= 2 ? 'Regular - Necesita mejoras' : 'Deficiente - Requiere acción inmediata'}
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex justify-between gap-">                                
-                                    <div className="bg-gray-50 px-6 py-4 flex justify-center border-t border-gray-200">
-                                        <button
-                                            onClick={() => handleNavigate("/categorias-auditoria-produccion-sostener")}
-                                            className="items-center px-3 py-1 border border-transparent text-base
-                                                font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700
-                                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 hover:cursor-pointer
-                                                me-2
-                                            "
-                                        >
-                                            Volver
-                                        </button>
-                                        
-                                        <button
-                                            onClick={ sendDataToBackend }
-                                            className="items-center px-3 py-1 border border-transparent text-base
-                                                font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700
-                                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:cursor-pointer
-                                            "
-                                        >                                            
-                                            Guardar los resultados
-                                        </button>
-                                    </div>
-                                </div>
+                                <button
+                                    onClick={ sendDataToBackend }
+                                    className="items-center px-3 py-1 border border-transparent text-base
+                                        font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700
+                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:cursor-pointer
+                                    "
+                                >                                            
+                                    Guardar los resultados
+                                </button>
                             </div>
                         </div>
                     </div>
