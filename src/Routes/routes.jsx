@@ -10,6 +10,13 @@ import ProduccionSostenerFormPage from "../pages/Produccion/ProduccionSostenerFo
 import HomePage from "../pages/Home/HomePage";
 import ProduccionResultadoFinalPage from "../pages/Produccion/ProduccionResultadoFinalPage";
 import AdminIndex from "../pages/Admin/AdminIndex";
+import NombreUsuarioFormPerifericas from "../components/NombreUsuarioForm/Perifericas/NombreUsuarioFormPerifericas";
+import PerifericasSeleccionFormPage from "../pages/Perifericas/PerifericasSeleccionFormPage";
+import PerifericasLimpiezaFormPage from "../pages/Perifericas/PerifericasLimpiezaFormPage";
+import PerifericasOrdenFormPage from "../pages/Perifericas/PerifericasOrdenFormPage";
+import PerifericasEstandarFormPage from "../pages/Perifericas/PerifericasEstandarFormPage";
+import PerifericasSostenerFormPage from "../pages/Perifericas/PerifericasSostenerFormPage";
+import PerifericasResultadoFinalPage from "../pages/Perifericas/PerifericasResultadoFinalPage";
 
 const MyRoutes = () => {
     return (
@@ -25,6 +32,15 @@ const MyRoutes = () => {
                 <Route path="/categorias-auditoria-produccion-estandar" element={<ProduccionEstandarFormPage/>}/>
                 <Route path="/categorias-auditoria-produccion-sostener" element={<ProduccionSostenerFormPage/>}/>
                 <Route path="/categorias-auditoria-produccion-resultado" element={<ProduccionResultadoFinalPage/>}/>
+                
+                {/* Perífericas */}
+                <Route path="/ingresar-nombre-perifericas" element={<NombreUsuarioFormPerifericas/>}/>
+                <Route path="/categorias-auditoria-perifericas-seleccion" element={<PerifericasSeleccionFormPage/>}/>
+                <Route path="/categorias-auditoria-perifericas-orden" element={<PerifericasOrdenFormPage/>}/>
+                <Route path="/categorias-auditoria-perifericas-limpieza" element={<PerifericasLimpiezaFormPage/>}/>
+                <Route path="/categorias-auditoria-perifericas-estandar" element={<PerifericasEstandarFormPage/>}/>
+                <Route path="/categorias-auditoria-perifericas-sostener" element={<PerifericasSostenerFormPage/>}/>
+                <Route path="/categorias-auditoria-perifericas-resultado" element={<PerifericasResultadoFinalPage/>}/>
 
                 {/* Administrador */}
                 <Route path="/administrador" element={<AdminIndex/>}/>
