@@ -19,6 +19,6 @@ export const AuditoriaCard = [
         title: "Oficinas",
         icon: <HiOfficeBuilding/>,
         description: "",
-        path: "/oficinas"
+        path: "/ingresar-nombre-oficinas"
     }
 ];
