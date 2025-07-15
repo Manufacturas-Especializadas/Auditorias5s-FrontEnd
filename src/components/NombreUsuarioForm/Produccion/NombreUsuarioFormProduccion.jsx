@@ -37,7 +37,7 @@ const NombreUsuarioForm = () => {
                 <div className="w-full max-w-md md:max-w-2xl bg-white rounded-xl shadow-xl overflow-hidden">
 
                     <div className="bg-gradient-to-r from-primary to-secondary p-6 text-white">
-                        <h2 className="text-2xl font-bold">Nueva adutoría para produccíon</h2>
+                        <h2 className="text-2xl font-bold">Nueva auditoría para produccíon</h2>
                         <p className="text-white opacity-90">Completa los detalles requeridos</p>
                     </div>
 
