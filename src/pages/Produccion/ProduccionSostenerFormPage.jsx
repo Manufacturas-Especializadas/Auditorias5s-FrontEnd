@@ -2,91 +2,36 @@ import { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PreguntasProduccionSostenerData } from "../../data/PreguntasProduccion/PreguntasProduccionSostenerData";
 import { savePhotos, getPhoto } from "../../services/photoStorage";
-import AuditoriaContext from "../../context/AuditoriaContext";
+import AuditoriaContext, { AUDIT_TYPES } from "../../context/AuditoriaContext";
+import QuestionItem from "../../components/QuestionItem/QuestionItem";
+import PhotoPreview from "../../components/PhotoPreview/PhotoPreview";
+import FileUpload from "../../components/FileUpload/FileUpload";
+import BackButton from "../../components/Buttons/BackButton/BackButton";
+import SaveButton from "../../components/Buttons/SaveButton/SaveButton";
 
 const ProduccionSostenerFormPage = () => {
-    const{ respuestasSecciones, setRespuestasSecciones, auditorData, setAuditorData }  = useContext(AuditoriaContext);
-    const[respuestas, setRespuestas] = useState(respuestasSecciones.sostener || {});
-    const[mostrarHallazgos, setMostrarHallazgos] = useState(false);
-    const[hallazgos, setHallazgos] = useState("");
-    const[fotos, setFotos] = useState([]);
-    const[previews, setPreviews] = useState([]);
+    const { 
+        respuestasSecciones, 
+        setRespuestasSecciones, 
+        auditorData, 
+        setAuditorData,
+        setAuditType
+    } = useContext(AuditoriaContext);
+    
+    const [respuestas, setRespuestas] = useState({});
+    const [mostrarHallazgos, setMostrarHallazgos] = useState(false);
+    const [hallazgos, setHallazgos] = useState("");
+    const [fotos, setFotos] = useState([]);
+    const [previews, setPreviews] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
 
     const navigate = useNavigate();
 
-    const handleNavigate = (path) => {
-        navigate(path);
-    };
-
-    const handleChange = (pregunta, valor) => {
-        setRespuestas((prev) => ({
-            ...prev,
-            [pregunta]: valor
-        }));
-    };
-
-    const handleFileChange = async (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            setIsUploading(true);
-            try {
-                const newFiles = Array.from(e.target.files);
-                                
-                const newPhotoRefs = await savePhotos(newFiles);
-                
-                const updatedData = {
-                    ...auditorData,
-                    photoRefs: [...(auditorData.photoRefs || []), ...newPhotoRefs]
-                };
-                
-                setAuditorData(updatedData);
-                localStorage.setItem('auditoriaData', JSON.stringify(updatedData));
-                
-                setFotos(prev => [...prev, ...newFiles]);
-                setPreviews(prev => [
-                    ...prev, 
-                    ...newFiles.map(file => URL.createObjectURL(file))
-                ]);
-                
-            } catch (error) {
-                console.error("Error al guardar fotos:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error al subir fotos',
-                    text: 'No se pudieron guardar las fotos seleccionadas'
-                });
-            }finally{
-                setIsUploading(false);
-            }            
-        }
-    };
-
-    const removeFoto = (index) => {
-        setFotos(prev => prev.filter((_, i) => i !== index));
-    };
-
-    const handleSave = () => {
-        const nuevasRespuestas = {
-            ...respuestasSecciones,
-            sostener: respuestas
-        };
-        
-        setAuditorData(prev => ({
-            ...prev,
-            description: hallazgos || ""
-        }));
-        
-        setRespuestasSecciones(nuevasRespuestas);
-        
-        localStorage.setItem('auditoriaData', JSON.stringify({
-            ...auditorData,
-            description: hallazgos || "",
-            photos: fotos || []
-        }));
-        localStorage.setItem("auditoriaRespuestas", JSON.stringify(nuevasRespuestas));
-        
-        handleNavigate("/categorias-auditoria-produccion-resultado");
-    };
+    useEffect(() => {
+        setAuditType(AUDIT_TYPES.PRODUCCION);
+        setRespuestas(respuestasSecciones.sostener || {});
+        setHallazgos(auditorData.description || "");
+    }, []);
 
     useEffect(() => {
         const loadPreviews = async () => {
@@ -101,13 +46,78 @@ const ProduccionSostenerFormPage = () => {
             }
         };
         loadPreviews();
-    }, []);
+    }, [auditorData.photoRefs]);
 
     useEffect(() => {
         return () => {
             previews.forEach(preview => URL.revokeObjectURL(preview));
         };
-    }, [previews]);    
+    }, [previews]);
+
+    const handleChange = (idPregunta, valor) => {
+        setRespuestas((prev) => ({
+            ...prev,
+            [idPregunta]: valor
+        }));
+    };
+
+    const handleFileChange = async (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setIsUploading(true);
+            try {
+                const newFiles = Array.from(e.target.files);
+                const newPhotoRefs = await savePhotos(newFiles);
+                
+                const updatedData = {
+                    ...auditorData,
+                    photoRefs: [...(auditorData.photoRefs || []), ...newPhotoRefs]
+                };
+                
+                setAuditorData(updatedData);
+                setFotos(prev => [...prev, ...newFiles]);
+                setPreviews(prev => [
+                    ...prev, 
+                    ...newFiles.map(file => URL.createObjectURL(file))
+                ]);
+                
+            } catch (error) {
+                console.error("Error al guardar fotos:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al subir fotos',
+                    text: 'No se pudieron guardar las fotos seleccionadas'
+                });
+            } finally {
+                setIsUploading(false);
+            }
+        }
+    };
+
+    const removeFoto = (index) => {
+        setFotos(prev => prev.filter((_, i) => i !== index));
+        setPreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleSave = () => {
+        const nuevasRespuestas = {
+            ...respuestasSecciones,
+            sostener: respuestas
+        };
+        
+        const updatedAuditorData = {
+            ...auditorData,
+            description: hallazgos || ""
+        };
+        
+        setAuditorData(updatedAuditorData);
+        setRespuestasSecciones(nuevasRespuestas);
+        
+        navigate("/categorias-auditoria-produccion-resultado");
+    };
+
+    const handleBack = () => {
+        navigate("/categorias-auditoria-produccion-estandar");
+    };    
 
     return (
         <>
@@ -126,42 +136,13 @@ const ProduccionSostenerFormPage = () => {
                         <div className="p-6 sm:p-8 space-y-8">
                             {
                                 PreguntasProduccionSostenerData.map((pregunta, index) =>(
-                                    <div key={ pregunta.id } className="space-y-4">
-                                        <div className="flex items-start">
-                                            <span className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full
-                                            bg-primary text-white font-medium mr-3 mt-0.5">
-                                                { index + 1 }
-                                            </span>
-                                            <label className="block text-sm font-medium text-gray-700">
-                                                { pregunta.texto }
-                                            </label>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-2">
-                                            {[1, 2, 3, 4, 5].map(valor => (
-                                                <label
-                                                    key={ valor }
-                                                    className={`flex items-center justify-center h-10 w-10 rounded-full border-2 cursor-pointer transition-all
-                                                        ${respuestas[pregunta.id] === valor
-                                                            ? "bg-blue-600 text-white border-blue-700 shadow-inner"
-                                                            : "bg-white border-gray-300 hover:bg-blue-50 hover:border-blue-300"
-                                                        }`}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        id={`${pregunta.id}-${valor}`}
-                                                        name={ pregunta.id }
-                                                        value={ valor }
-                                                        checked={ respuestas[pregunta.id] === valor }
-                                                        onChange={() => handleChange(pregunta.id, valor)}
-                                                        className="sr-only"
-                                                        required
-                                                    />
-                                                    { valor }
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    <QuestionItem
+                                        key={ pregunta.id }
+                                        index={ index }
+                                        pregunta={ pregunta }
+                                        value={ respuestas[pregunta.id] }
+                                        onChange={(valor) => handleChange(pregunta.id, valor)}
+                                    />
                                 ))
                             }
                         </div>
@@ -208,58 +189,19 @@ const ProduccionSostenerFormPage = () => {
                                                 Evidencia fotográfica (opcional)
                                             </label>
 
-                                            {
-                                                fotos.length > 0 && (
-                                                    <div className="grid grid-cols-3 gap-2 mb-3">
-                                                        {
-                                                            fotos.map((foto, index) => (
-                                                                <div
-                                                                    key={ index }
-                                                                    className="relative group"
-                                                                >
-                                                                    <img 
-                                                                        src={URL.createObjectURL(foto)} 
-                                                                        alt={`Evidencia ${index + 1}`}
-                                                                        className="h-24 w-full object-cover rounded border border-gray-200"
-                                                                    />
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => removeFoto(index)}
-                                                                        className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1
-                                                                        opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                    >
-                                                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                        </svg>
-                                                                    </button>
-                                                                </div>
-                                                            ))
-                                                        }
-                                                    </div>
-                                                )
-                                            }
-                                            <label className="flex flex-col items-center justify-center w-full p-4 border-2 border-gray-300
-                                                rounded-lg cursor-pointer hover:border-primary hover:bg-gray-50 transition">
-                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                    <svg className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <p className="mb-2 text-sm text-gray-400">
-                                                        <span className="font-semibold">Haz clic para subir</span> o arrastra las fotos
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        PNG, JPG, o JPEG
-                                                    </p>
-                                                </div>
-                                                <input 
-                                                    id="fotos"
-                                                    type="file"
-                                                    multiple
-                                                    accept="image/"
-                                                    onChange={ handleFileChange }
-                                                    className="hidden" 
+                                            {previews.map((preview, index) => (
+                                                <PhotoPreview 
+                                                    key={index}
+                                                    preview={preview}
+                                                    index={index}
+                                                    onRemove={removeFoto}
                                                 />
-                                            </label>
+                                            ))}
+                                            
+                                            <FileUpload
+                                                isUploading={ isUploading }
+                                                onFileChange={ handleFileChange }
+                                            />
                                         </div>
                                     </>
                                 )
@@ -267,31 +209,8 @@ const ProduccionSostenerFormPage = () => {
                         </div>
 
                         <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-200">
-                            <button
-                                type="button"
-                                onClick={() => handleNavigate("/categorias-auditoria-produccion-estandar")}
-                                className="inline-flex items-center px-4 py-2 border border-gray-300
-                                shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white
-                                hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2
-                                focus:ring-blue-500 hover:cursor-pointer"
-                            >
-                                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                </svg>
-                                Volver
-                            </button>
-                            <button
-                                onClick={ handleSave }
-                                className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium
-                                rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none
-                                focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200
-                                hover:cursor-pointer"
-                            >
-                                Guardar respuestas
-                                <svg className="h-5 w-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>                           
-                            </button>
+                            <BackButton onClick={ handleBack }/>
+                            <SaveButton onClick={ handleSave }/>
                         </div>
                     </form>
                 </div>
