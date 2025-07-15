@@ -13,7 +13,7 @@ export const AuditoriaCard = [
         title: "Perífericas",
         icon: <IoBuild/>,
         description: "",
-        path: "/perifericas"
+        path: "/ingresar-nombre-perifericas"
     },
     {
         title: "Oficinas",
