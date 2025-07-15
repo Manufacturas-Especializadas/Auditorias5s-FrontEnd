@@ -51,18 +51,18 @@ const PerifericasResultadoFinalPage = () => {
     const getResponsesToSend = () => {
         const answers = [];
 
-        const processSection = (section, startId) => {
-            return Object.entries(section).map(([key, score], i) => ({
-                IdQuestion: startId + i,
+        const processSection = (section) => {
+            return Object.entries(section).map(([key, score]) => ({
+                IdQuestion: parseInt(key),
                 score: parseInt(score)
             }));
         };
 
-        answers.push(...processSection(respuestasSecciones.seleccion, 1));
-        answers.push(...processSection(respuestasSecciones.orden, 4));
-        answers.push(...processSection(respuestasSecciones.limpieza, 7));
-        answers.push(...processSection(respuestasSecciones.estandar, 10));
-        answers.push(...processSection(respuestasSecciones.sostener, 13));
+        answers.push(...processSection(respuestasSecciones.seleccion));
+        answers.push(...processSection(respuestasSecciones.orden));
+        answers.push(...processSection(respuestasSecciones.limpieza));
+        answers.push(...processSection(respuestasSecciones.estandar));
+        answers.push(...processSection(respuestasSecciones.sostener));
 
         return answers;
     };
