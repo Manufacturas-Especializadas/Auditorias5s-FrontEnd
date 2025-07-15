@@ -5,15 +5,11 @@ const AuditoriaContext = createContext();
 
 const AUDIT_TYPES = {
     PRODUCCION: 'produccion',
-    PERIFERICOS: 'perifericos'
+    PERIFERICOS: 'perifericos',
+    OFICINAS: 'oficinas'
 };
 
-export const AuditoriaProvider = ({ children }) => {
-    const [auditType, setAuditType] = useState(AUDIT_TYPES.PRODUCCION); 
-
-    const [auditState, setAuditState] = useState(() => {
-    const savedState = localStorage.getItem('auditoriaState');
-    return savedState ? JSON.parse(savedState) : {
+const getDefaultState = () => ({
     [AUDIT_TYPES.PRODUCCION]: {
         auditorData: {
             responsible: "",
@@ -30,35 +26,70 @@ export const AuditoriaProvider = ({ children }) => {
         }
     },
     [AUDIT_TYPES.PERIFERICOS]: {
-            auditorData: {
-                responsible: "",
-                area: "",
-                description: "",
-                photoRefs: []
-            },
-            respuestasSecciones: {
-                seleccion: {},
-                orden: {},
-                limpieza: {},
-                estandar: {},
-                sostener: {}
-            }
+        auditorData: {
+            responsible: "",
+            area: "",
+            description: "",
+            photoRefs: []
+        },
+        respuestasSecciones: {
+            seleccion: {},
+            orden: {},
+            limpieza: {},
+            estandar: {},
+            sostener: {}
         }
-    };
+    },
+    [AUDIT_TYPES.OFICINAS]: {
+        auditorData: {
+            responsible: "",
+            area: "",
+            description: "",
+            photoRefs: []
+        },
+        respuestasSecciones: {
+            seleccion: {},
+            orden: {},
+            limpieza: {},
+            estandar: {},
+            sostener: {}
+        }
+    }
 });
 
-    const currentData = (type = auditType) => ({
-        uditorData: auditState[type].auditorData,
-        respuestasSecciones: auditState[type].respuestasSecciones
+export const AuditoriaProvider = ({ children }) => {
+    const [auditType, setAuditType] = useState(AUDIT_TYPES.PRODUCCION);
+
+    const [auditState, setAuditState] = useState(() => {
+        let savedState;
+        try {
+            savedState = JSON.parse(localStorage.getItem('auditoriaState'));
+        } catch {
+            savedState = null;
+        }
+
+        const defaultState = getDefaultState();
+
+        if (!savedState ||
+            !savedState[AUDIT_TYPES.PRODUCCION] ||
+            !savedState[AUDIT_TYPES.PERIFERICOS] ||
+            !savedState[AUDIT_TYPES.OFICINAS]
+        ) {
+            return defaultState;
+        }
+
+        return savedState;
     });
+
+    const auditEntry = auditState[auditType] || getDefaultState()[auditType];
 
     const updateAuditState = (type, newData) => {
         setAuditState(prev => {
             const updated = {
                 ...prev,
                 [type]: {
-                ...prev[type],
-                ...newData
+                    ...prev[type],
+                    ...newData
                 }
             };
             localStorage.setItem('auditoriaState', JSON.stringify(updated));
@@ -67,56 +98,42 @@ export const AuditoriaProvider = ({ children }) => {
     };
 
     const clearAuditData = async (type) => {
-            const photos = auditState[type].auditorData.photoRefs;
-            if (photos?.length > 0) {
-                await cleanupPhotos(photos);
-            }
-            
-            setAuditState(prev => {
-                const updated = {
-                    ...prev,
-                    [type]: {
-                        auditorData: {
-                            responsible: "",
-                            area: "",
-                            description: "",
-                            photoRefs: []
-                        },
-                    respuestasSecciones: {
-                            seleccion: {},
-                            orden: {},
-                            limpieza: {},
-                            estandar: {},
-                            sostener: {}
-                        }
-                    }
+        const photos = auditState[type]?.auditorData?.photoRefs || [];
+
+        if (photos.length > 0) {
+            await cleanupPhotos(photos);
+        }
+
+        setAuditState(prev => {
+            const updated = {
+                ...prev,
+                [type]: getDefaultState()[type]
             };
-                localStorage.setItem('auditoriaState', JSON.stringify(updated));
-                return updated;
-            });
-        };
+            localStorage.setItem('auditoriaState', JSON.stringify(updated));
+            return updated;
+        });
+    };
 
     return (
-        <AuditoriaContext.Provider 
-            value={{            
-                auditorData: auditState[auditType].auditorData,
-                respuestasSecciones: auditState[auditType].respuestasSecciones,
-                
+        <AuditoriaContext.Provider
+            value={{
+                auditorData: auditEntry.auditorData,
+                respuestasSecciones: auditEntry.respuestasSecciones,
+
                 auditState,
                 auditType,
                 AUDIT_TYPES,
-                
-                setAuditorData: (data) => updateAuditState(auditType, { auditorData: data }),
-                setRespuestasSecciones: (respuestas) => 
-                    updateAuditState(auditType, { respuestasSecciones: respuestas }),
-                
-                clearAllData: () => clearAuditData(auditType),
+
                 setAuditType,
-                
-                getAuditDataByType: (type) => auditState[type]
+                setAuditorData: (data) => updateAuditState(auditType, { auditorData: data }),
+                setRespuestasSecciones: (respuestas) => updateAuditState(auditType, { respuestasSecciones: respuestas }),
+
+                clearAllData: () => clearAuditData(auditType),
+
+                getAuditDataByType: (type) => auditState[type] || getDefaultState()[type]
             }}
         >
-            { children }
+            {children}
         </AuditoriaContext.Provider>
     );
 };
