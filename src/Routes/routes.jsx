@@ -17,6 +17,13 @@ import PerifericasOrdenFormPage from "../pages/Perifericas/PerifericasOrdenFormP
 import PerifericasEstandarFormPage from "../pages/Perifericas/PerifericasEstandarFormPage";
 import PerifericasSostenerFormPage from "../pages/Perifericas/PerifericasSostenerFormPage";
 import PerifericasResultadoFinalPage from "../pages/Perifericas/PerifericasResultadoFinalPage";
+import NombreUsuarioFormOficinas from "../components/NombreUsuarioForm/Oficinas/NombreUsuarioFormOficinas";
+import OficinasSeleccionFormPage from "../pages/Oficinas/OficinasSeleccionFormPage";
+import OficinasOrdenFormPage from "../pages/Oficinas/OficinasOrdenFormPage";
+import OficinasLimpiezaFormPage from "../pages/Oficinas/OficinasLimpiezaFormPage";
+import OficinasEstandarFormPage from "../pages/Oficinas/OficinasEstandarFormPage";
+import OficinasSostenerFormPage from "../pages/Oficinas/OficinasSostenerFormPage";
+import OficinasResultadoFinalPage from "../pages/Oficinas/OficinasResultadoFinalPage";
 
 const MyRoutes = () => {
     return (
@@ -41,6 +48,15 @@ const MyRoutes = () => {
                 <Route path="/categorias-auditoria-perifericas-estandar" element={<PerifericasEstandarFormPage/>}/>
                 <Route path="/categorias-auditoria-perifericas-sostener" element={<PerifericasSostenerFormPage/>}/>
                 <Route path="/categorias-auditoria-perifericas-resultado" element={<PerifericasResultadoFinalPage/>}/>
+
+                {/* Oficinas */}
+                <Route path="/ingresar-nombre-oficinas" element={<NombreUsuarioFormOficinas/>}/>
+                <Route path="/categorias-auditoria-oficinas-seleccion" element={<OficinasSeleccionFormPage/>}/>
+                <Route path="/categorias-auditoria-oficinas-orden" element={<OficinasOrdenFormPage/>}/>
+                <Route path="/categorias-auditoria-oficinas-limpieza" element={<OficinasLimpiezaFormPage/>}/>
+                <Route path="/categorias-auditoria-oficinas-estandar" element={<OficinasEstandarFormPage/>}/>
+                <Route path="/categorias-auditoria-oficinas-sostener" element={<OficinasSostenerFormPage/>}/>
+                <Route path="/categorias-auditoria-oficinas-resultado" element={<OficinasResultadoFinalPage/>}/>
 
                 {/* Administrador */}
                 <Route path="/administrador" element={<AdminIndex/>}/>
