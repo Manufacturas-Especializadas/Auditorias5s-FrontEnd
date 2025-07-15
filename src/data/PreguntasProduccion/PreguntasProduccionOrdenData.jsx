@@ -9,7 +9,7 @@ export const PreguntasProduccionOrdenData = [
     },
     {
         id: 8,
-        texto: "Las gavetas de plantillas de herramientales cuentan con listado de materiales en donde se indique la cantidad por artículo; de tal manera que es fácil encontrarlos y almacenarlos"
+        texto: "Las gavetas de herramental se encuentra ordenada de tal manera que sea fácil encontrarlos y almacenarlos."
     },
     {
         id: 9,
@@ -21,6 +21,6 @@ export const PreguntasProduccionOrdenData = [
     },
     {
         id: 11,
-        texto: "La maquinaria está libre de tubería de cobre o aluminio, herramientas y herramientales. Toda herramienta se encuentra en caja de herramientas, los herramientales en gavetas y la tubería en carros o cajas de traslado"
+        texto: "La maquinaria está libre de tubería cobre o aluminio, herramienta y herramentales. Toda herramienta se encuentra en caja de herramienta, los herramentales en gavetas y la tubería en carros o cajas de traslado."
     }
 ];
