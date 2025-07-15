@@ -1,34 +1,33 @@
-import { useContext, useState } from "react"
+import { useContext, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom";
-import AuditoriaContext from "../../../context/AuditoriaContext";
+import AuditoriaContext, { AUDIT_TYPES } from "../../../context/AuditoriaContext";
 
 const NombreUsuarioForm = () => {
-    const { auditorData, setAuditorData } = useContext(AuditoriaContext);
-    const[responsible, setResponsible] = useState("");
-    const[area, setArea] = useState("");
+    const {
+        auditorData, 
+        setAuditorData,
+        setAuditType        
+    } = useContext(AuditoriaContext);
+
+    const [responsible, setResponsible] = useState(auditorData.responsible || "");
+    const [area, setArea] = useState(auditorData.area || "");
     const navigate = useNavigate();
 
-    const handleNavigate = (path) => {
-        navigate(path);
-    };
+    useEffect(() => {
+        setAuditType(AUDIT_TYPES.PRODUCCION);
+    }, [setAuditType]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
         if(responsible.trim() && area.trim()){
-            setAuditorData(prev => ({
-                ...prev,
+            setAuditorData({
+                ...auditorData,
                 responsible,
                 area
-            }));
+            });
 
-            localStorage.setItem("auditoriaData", JSON.stringify({
-                responsible,
-                area,
-                description: "",
-                photos: []
-            }));
-
-            handleNavigate("/categorias-auditoria-produccion-seleccion");
+            navigate("/categorias-auditoria-produccion-seleccion");
         }
     };
 
