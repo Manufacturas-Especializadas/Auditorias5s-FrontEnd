@@ -152,8 +152,9 @@ const PerifericasSostenerFormPage = () => {
                             <button
                                 type="button"
                                 onClick={() => setMostrarHallazgos(!mostrarHallazgos)}
-                                className="flex items-center text-sm font-medium text-gray-700
-                                hover:text-primary focus:outline-none hover:cursor-pointer"
+                                className="flex items-center gap-2 px-4 py-2 text-lg font-semibold text-white 
+                                bg-red-600 hover:bg-red-700 rounded-md shadow-lg transition-all 
+                                duration-300 focus:outline-none focus:ring-2 focus:ring-red-400 hover:cursor-pointer"
                             >
                                 <svg 
                                     className={`h-5 w-5 mr-2 transform transition-transform ${mostrarHallazgos ? "rotate-90" : ""}`} 
