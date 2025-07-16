@@ -69,11 +69,11 @@ const PerifericasResultadoFinalPage = () => {
 
 
     const validateAllAnswered = (answers) => {
-        if (!auditorData.responsible || !auditorData.area) {
+        if (!auditorData.responsible || !auditorData.selectedAreaId) {
             Swal.fire({
                 icon: 'error',
                 title: 'Datos incompletos',
-                text: 'Nombre del auditor y área son campos obligatorios'
+                text: 'Nombre del auditor y la línea de producción son obligatorios'
             });
             return false;
         }
@@ -106,15 +106,17 @@ const PerifericasResultadoFinalPage = () => {
 
             const formData = new FormData();
             formData.append('Responsible', auditorData.responsible);
-            formData.append('Area', auditorData.area);
+            formData.append('IdPeripheralArea', auditorData.selectedAreaId);
             formData.append('Description', auditorData.description || "");
             formData.append('IdForm', '2');
             
             formData.append('Answers', JSON.stringify(answers));
 
             if (auditorData.photoRefs?.length > 0) {
-                const photo = await getPhoto(auditorData.photoRefs[0].id);
-                formData.append('Photo', photo);
+                for (let i = 0; i < auditorData.photoRefs.length; i++) {
+                    const file = await getPhoto(auditorData.photoRefs[i].id);
+                    formData.append(`Photos`, file);
+                }
             }
 
             console.log("Answers a enviar:", answers);
