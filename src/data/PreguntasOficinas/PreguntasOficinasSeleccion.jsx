@@ -5,10 +5,10 @@ export const PreguntasOficinasSeleccion = [
     },
     {
         id: 39,
-        texto: "No deberán existir artículos innecesarios en el área de trabajo y los que están deben estar funcionando."
+        texto: "Áreas de trabajo tienen documentos o elementos innecesarios para el trabajo en oficina"
     },
     {
         id: 40,
-        texto: "El mobiliario (sillas, escritorios, archiveros, equipo de oficina)"
+        texto: "¿Existen articulos innecesarios en los estantes, gavetas y cajones? (Equipos antiguos, papeles, objetos utilizados en  producción)"
     }
 ];
