@@ -13,7 +13,7 @@ const getDefaultState = () => ({
     [AUDIT_TYPES.PRODUCCION]: {
         auditorData: {
             responsible: "",
-            area: "",
+            selectedAreaId: null,
             description: "",
             photoRefs: []
         },
@@ -28,7 +28,7 @@ const getDefaultState = () => ({
     [AUDIT_TYPES.PERIFERICOS]: {
         auditorData: {
             responsible: "",
-            area: "",
+            selectedAreaId: null,
             description: "",
             photoRefs: []
         },
@@ -43,7 +43,7 @@ const getDefaultState = () => ({
     [AUDIT_TYPES.OFICINAS]: {
         auditorData: {
             responsible: "",
-            area: "",
+            selectedAreaId: null,
             description: "",
             photoRefs: []
         },
