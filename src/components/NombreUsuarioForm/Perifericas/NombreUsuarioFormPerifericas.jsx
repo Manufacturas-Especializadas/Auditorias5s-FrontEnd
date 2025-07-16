@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuditoriaContext, { AUDIT_TYPES } from "../../../context/AuditoriaContext";
+import config from "../../../../config";
 
 const NombreUsuarioFormPerifericas = () => {
     const {
@@ -11,7 +12,28 @@ const NombreUsuarioFormPerifericas = () => {
 
     const [responsible, setResponsible] = useState(auditorData.responsible || "");
     const [area, setArea] = useState(auditorData.area || "");
+    const [selectedAreaId, setSelectedAreaId] = useState(auditorData.selectedAreaId || null);
+    const [periPheraArea, setPeriPheraArea] = useState([]);
+
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const getListPeriPheraArea = async() => {
+            try{
+                const response = await fetch(`${config.apiUrl}/Audits/GetListPeripheralArea`);
+                if(!response.ok){
+                    throw new Error("Error al obtener la lista");
+                }
+
+                const data = await response.json();
+                setPeriPheraArea(data);
+            }catch(error){
+                console.error("Error al a hacer fetching", error);
+            }
+        };
+
+        getListPeriPheraArea();
+    }, [])
 
     useEffect(() => {
         setAuditType(AUDIT_TYPES.PERIFERICOS);
@@ -20,11 +42,11 @@ const NombreUsuarioFormPerifericas = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if(responsible.trim() && area.trim()){
+        if (responsible.trim() && selectedAreaId) {
             setAuditorData({
                 ...auditorData,
                 responsible,
-                area
+                selectedAreaId
             });
 
             navigate("/categorias-auditoria-perifericas-seleccion");
@@ -64,15 +86,21 @@ const NombreUsuarioFormPerifericas = () => {
                             <label className="block text-sm font-medium text-gray-700">
                                 Área a auditar <span className="text-red-500">*</span>
                             </label>
-                            <input
+                            <select
                                 required
-                                type="text"
-                                value={ area }
-                                onChange={(e) => setArea(e.target.value)}
-                                className="mt-1 block w-full border border-gray-300
+                                value={ selectedAreaId || "" }
+                                onChange={(e) => setSelectedAreaId(Number(e.target.value))}
+                                className="mt-1 block w-full border border-gray-300 
                                 rounded-md shadow-md py-2 px-3 focus:outline-none
-                                focus:ring-indigo-500 focus:border-indigo-500"                                
-                            />
+                                focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                <option value="" disabled>Selecciona una area periferica</option>
+                                {periPheraArea.map(area => (
+                                    <option key={ area.id } value={ area.id }>
+                                        { area.name }
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="pt-4">

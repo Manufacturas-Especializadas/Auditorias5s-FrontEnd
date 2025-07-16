@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom";
 import AuditoriaContext, { AUDIT_TYPES } from "../../../context/AuditoriaContext";
+import config from "../../../../config";
 
 const NombreUsuarioForm = () => {
     const {
@@ -10,8 +11,28 @@ const NombreUsuarioForm = () => {
     } = useContext(AuditoriaContext);
 
     const [responsible, setResponsible] = useState(auditorData.responsible || "");
-    const [area, setArea] = useState(auditorData.area || "");
+    const [selectedAreaId, setSelectedAreaId] = useState(auditorData.selectedAreaId || null);
+    const [productionLines, setProductionLines] = useState([]);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const getListProductionLines = async() =>{
+            try{
+                const response = await fetch(`${config.apiUrl}/Audits/GetListProductionLines`);
+
+                if(!response.ok){
+                    throw new Error("Error al obtener la lista");
+                }
+
+                const data = await response.json();
+                setProductionLines(data);
+            }catch(error){
+                console.error("Error al a hacer fetching", error);
+            }
+        }
+
+        getListProductionLines();
+    }, []);
 
     useEffect(() => {
         setAuditType(AUDIT_TYPES.PRODUCCION);
@@ -20,11 +41,11 @@ const NombreUsuarioForm = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if(responsible.trim() && area.trim()){
+        if (responsible.trim() && selectedAreaId) {
             setAuditorData({
                 ...auditorData,
                 responsible,
-                area
+                selectedAreaId
             });
 
             navigate("/categorias-auditoria-produccion-seleccion");
@@ -64,15 +85,21 @@ const NombreUsuarioForm = () => {
                             <label className="block text-sm font-medium text-gray-700">
                                 Área a auditar <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                required 
-                                type="text"
-                                value={ area }
-                                onChange={(e) => setArea(e.target.value)}
+                            <select 
+                                required
+                                value={ selectedAreaId || "" }
+                                onChange={(e) => setSelectedAreaId(Number(e.target.value))}
                                 className="mt-1 block w-full border border-gray-300 
                                 rounded-md shadow-md py-2 px-3 focus:outline-none
                                 focus:ring-indigo-500 focus:border-indigo-500"
-                            />
+                            >
+                                <option value="" disabled>Selecciona una línea</option>
+                                {productionLines.map(line => (
+                                    <option key={ line.id } value={ line.id }>
+                                        { line.name }
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="pt-4">
