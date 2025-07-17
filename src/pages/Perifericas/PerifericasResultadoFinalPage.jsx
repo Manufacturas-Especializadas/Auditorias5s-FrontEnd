@@ -97,6 +97,14 @@ const PerifericasResultadoFinalPage = () => {
 
         // if(!validateAllAnswered(answers)) return;
 
+        if(auditorData.photoRefs?.length > 10){
+            Swal.fire({
+                icon: "warning",
+                title: "Demasiadas fotos",
+                text: "Solo puede subir hasta 10 fotos como evidencia"
+            });
+        }
+
         try {
             const swalInstance = Swal.fire({
                 title: "Guardando...",

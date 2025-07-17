@@ -8,6 +8,7 @@ import PhotoPreview from "../../components/PhotoPreview/PhotoPreview";
 import FileUpload from "../../components/FileUpload/FileUpload";
 import BackButton from "../../components/Buttons/BackButton/BackButton";
 import SaveButton from "../../components/Buttons/SaveButton/SaveButton";
+import Swal from "sweetalert2";
 
 const ProduccionSostenerFormPage = () => {
     const { 
@@ -63,7 +64,20 @@ const ProduccionSostenerFormPage = () => {
 
     const handleFileChange = async (e) => {
         if (e.target.files && e.target.files.length > 0) {
+            const totalSelected = fotos.length + e.target.files.length;
+
+            if(totalSelected > 10){
+                Swal.fire({
+                    icon: "warning",
+                    title: "Limite excedido",
+                    text: "Solo puedes subir hasta 10 fotos"
+                });
+
+                return;
+            }
+
             setIsUploading(true);
+            
             try {
                 const newFiles = Array.from(e.target.files);
                 const newPhotoRefs = await savePhotos(newFiles);
@@ -174,6 +188,8 @@ const ProduccionSostenerFormPage = () => {
                                                 Descripción de hallazgos (opcional)
                                             </label>
                                             <textarea
+                                                type="file"
+                                                accept="image/*"
                                                 id="hallazgos"
                                                 rows={ 3 }
                                                 value={ hallazgos }
