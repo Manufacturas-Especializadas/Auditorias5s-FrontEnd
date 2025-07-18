@@ -13,6 +13,8 @@ const AdminIndex = () => {
     const [filterText, setFilterText] = useState('');
     const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
     const [downloading, setDownloading] = useState(false);
+    const [responsibleFilter, setResponsibleFilter] = useState("");
+    const [dateFilter, setDateFilter] = useState("");
 
     useEffect(() => {
         const getListAudits = async() => {
@@ -80,10 +82,11 @@ const AdminIndex = () => {
         }
     };
 
-    const filteredItems = audits.filter(
-        item => item.responsible && item.responsible.toLowerCase().includes(filterText.toLowerCase()) ||
-                item.area && item.area.toLowerCase().includes(filterText.toLowerCase())
-    );
+    const filteredItems = audits.filter(item => {
+        const responsibleMatch = item.responsible?.toLowerCase().includes(responsibleFilter.toLowerCase());
+        const dateMatch = format(new Date(item.date), 'dd/MM/yyyy').includes(dateFilter);
+        return responsibleMatch && dateMatch;
+    });
 
     const columns = [
         {
@@ -170,40 +173,52 @@ const AdminIndex = () => {
     };
 
     const subHeaderComponentMemo = useMemo(() => {
-        const handleClear = () => {
-            if (filterText) {
-                setResetPaginationToggle(!resetPaginationToggle);
-                setFilterText('');
-            }
+        const clearAll = () => {
+            setResponsibleFilter("");
+            setDateFilter("");
         };
 
-        return (
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-gray-50 border-b border-gray-200">
-                <div className="relative w-full md:w-64 mb-4 md:mb-0">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FiSearch className="text-gray-400" />
-                    </div>
-                    <input
+        return(
+            <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 border-b border-gray-200">
+                <div className="flex flex-col">
+                    <label className="text-sm text-gray-500">
+                        Filtrar por auditor
+                    </label>
+                    <input 
                         type="text"
-                        placeholder="Buscar auditoría..."
-                        value={ filterText }
-                        onChange={e => setFilterText(e.target.value)}
-                        className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={ responsibleFilter }
+                        onChange={ e => setResponsibleFilter(e.target.value) }
+                        placeholder="Nombre del auditor"
+                        className="border px-3 py-1 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
                     />
-                    {filterText && (
-                        <button
-                            onClick={ handleClear }
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        >
-                            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    )}
-                </div>               
+                </div>
+                <div className="flex flex-col">
+                    <label className="text-sm text-gray-500">
+                        Filtrar por fecha
+                    </label>
+                    <input 
+                        type="text"
+                        value={ dateFilter }
+                        onChange={ e => setDateFilter(e.target.value)  }
+                        placeholder="dd/mm/aaaa"
+                        className="border px-3 py-1 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                {
+                    (responsibleFilter || dateFilter) && (
+                        <div className="flex items-end">
+                            <button
+                                onClick={ clearAll }
+                                className="text-red-500 hover:underline ml-4"
+                            >
+                                Limpiar filtros
+                            </button>
+                        </div>
+                    )
+                }
             </div>
-        );
-    }, [filterText, resetPaginationToggle]);
+        )
+    }, [responsibleFilter, dateFilter]);
 
     return (
         <>
@@ -221,7 +236,7 @@ const AdminIndex = () => {
                     <div className="bg-white shadow-lg rounded-lg overflow-hidden px-4">
                         <DataTable
                             columns={ columns }
-                            data={ audits }
+                            data={ filteredItems }
                             customStyles={ customStyles }
                             progressPending={ loading }
                             progressComponent={<div className="py-8">Cargando auditorías...</div>}
