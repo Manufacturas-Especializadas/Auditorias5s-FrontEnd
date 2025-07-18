@@ -99,14 +99,7 @@ const AdminIndex = () => {
             center: "center",
             selector: row => format(new Date(row.date), 'dd/MM/yyyy HH:mm:ss'),
             grow: 1
-        },
-        {
-            name: "Area",
-            selector: row => row.area,
-            sortable: "true",
-            center: "center",
-            grow: 1
-        },
+        },        
         {
             name: "Acciones",
             center: "center",
