@@ -48,7 +48,7 @@ const PerifericasEstandarFormPage = () => {
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-gradient-to-r from-primary to-secondary rounded-xl px-6 py-4 shadow-md">
                         <h1 className="text-2xl font-bold text-white text-center">
-                            Auditoría de producción - Categoría Estándar
+                            Auditoría de perífericas - Categoría Estándar
                         </h1>
                         <p className="text-white text-center mt-1">
                             Califique cada aspecto del 1 al 5
