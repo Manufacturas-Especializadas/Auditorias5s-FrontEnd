@@ -42,6 +42,15 @@ const AdminIndex = () => {
         try{
             setDownloading(true);
 
+            Swal.fire({
+                title: "Generando reporte",
+                html: "Por favor espere mientras se prepara tu archivo...",
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             const response = await fetch(`${config.apiUrl}/Audits/DownloadExcel`, {
                 method: 'POST',
                 headers: {
@@ -70,6 +79,17 @@ const AdminIndex = () => {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(downloadUrl);
+
+            Swal.close();
+
+            Swal.fire({
+                icon: "success",
+                title: "Descarga completa",
+                text: "El archivo se ha descargado correctamente",
+                timer: 2000,
+                showConfirmButton: false
+            });
+
         }catch(error){
             console.error("Error al descargar: ", error);
             Swal.fire({
