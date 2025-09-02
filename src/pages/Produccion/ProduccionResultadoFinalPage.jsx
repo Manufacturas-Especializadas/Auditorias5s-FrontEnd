@@ -8,13 +8,13 @@ import ScoreCard from "../../components/ScoreCard/ScoreCard";
 import FinalScore from "../../components/FinalScore/FinalScore";
 
 const ProduccionResultadoFinalPage = () => {
-    const { 
+    const {
         auditState,
         AUDIT_TYPES,
         setAuditType,
         clearAllData
     } = useContext(AuditoriaContext);
-    
+
     const { auditorData, respuestasSecciones } = auditState[AUDIT_TYPES.PRODUCCION] || {
         auditorData: {},
         respuestasSecciones: {
@@ -30,14 +30,17 @@ const ProduccionResultadoFinalPage = () => {
 
     useEffect(() => {
         setAuditType(AUDIT_TYPES.PRODUCCION);
-        
+
         console.log("Datos completos:", auditState);
         console.log("Datos de periféricos:", auditState[AUDIT_TYPES.PRODUCCION]);
     }, [setAuditType]);
 
 
     const calcularCalificacion = (respuestas) => {
-        return Object.values(respuestas).reduce((sum, val) => sum + (val || 0) * 0.2, 0);
+        return Object.values(respuestas).reduce((sum, val) => {
+            const score = parseInt(val, 10) || 0;
+            return sum + (score * 20);
+        }, 0);
     };
 
     const califSeleccion = calcularCalificacion(respuestasSecciones.seleccion);
@@ -46,26 +49,26 @@ const ProduccionResultadoFinalPage = () => {
     const califEstandar = calcularCalificacion(respuestasSecciones.estandar);
     const califSostener = calcularCalificacion(respuestasSecciones.sostener);
 
-    const resultadoFinal = (califSeleccion + califOrden + califLimpieza + califEstandar + califSostener) * 0.2;
+    const resultadoFinal = (califSeleccion + califOrden + califLimpieza + califEstandar + califSostener);
 
     const getResponsesToSend = () => {
         const answers = [];
         console.log("Estado global de respuestas:", respuestasSecciones);
 
-    
+
         const processSection = (section, startId) => {
             return Object.entries(section).map(([key, score], i) => ({
                 IdQuestion: startId + i,
                 score: parseInt(score)
             }));
         };
-    
+
         answers.push(...processSection(respuestasSecciones.seleccion, 1));
         answers.push(...processSection(respuestasSecciones.orden, 6));
         answers.push(...processSection(respuestasSecciones.limpieza, 12));
         answers.push(...processSection(respuestasSecciones.estandar, 16));
         answers.push(...processSection(respuestasSecciones.sostener, 19));
-    
+
         return answers;
     };
 
@@ -80,7 +83,7 @@ const ProduccionResultadoFinalPage = () => {
         }
 
         const invalidAnswers = answers.filter(a => a.score < 1 || a.score > 5);
-        
+
         if (invalidAnswers.length > 0) {
             Swal.fire({
                 icon: "error",
@@ -96,9 +99,9 @@ const ProduccionResultadoFinalPage = () => {
     const sendDataToBackend = async () => {
         const answers = getResponsesToSend();
 
-        if(!validateAllAnswered(answers)) return;
+        if (!validateAllAnswered(answers)) return;
 
-        if(auditorData.photoRefs?.length > 10){
+        if (auditorData.photoRefs?.length > 10) {
             Swal.fire({
                 icon: "warning",
                 title: "Demasiadas fotos",
@@ -118,7 +121,7 @@ const ProduccionResultadoFinalPage = () => {
             formData.append('IdProductionLines', auditorData.selectedAreaId);
             formData.append('Description', auditorData.description || "");
             formData.append('IdForm', '1');
-            
+
             formData.append('Answers', JSON.stringify(answers));
 
             if (auditorData.photoRefs?.length > 0) {
@@ -137,7 +140,7 @@ const ProduccionResultadoFinalPage = () => {
 
             await clearAllData();
             await swalInstance.close();
-            
+
             Swal.fire({
                 icon: "success",
                 title: "¡Auditoría guardada!",
@@ -145,7 +148,7 @@ const ProduccionResultadoFinalPage = () => {
                 timer: 2000,
                 showConfirmButton: false
             }).then(() => navigate("/"));
-            
+
         } catch (error) {
             Swal.fire({
                 icon: "error",
@@ -169,7 +172,7 @@ const ProduccionResultadoFinalPage = () => {
                         </h1>
                         <p className="text-blue-100 text-center mt-1">
                             Resumen de calificaciones por categoría
-                        </p>                        
+                        </p>
                     </div>
 
                     <div className="bg-white shadow-xl rounded-b-xl overflow-hidden divide-y divide-gray-200">
@@ -177,38 +180,38 @@ const ProduccionResultadoFinalPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <ScoreCard
                                     titulo="Selección"
-                                    puntuacion={ califSeleccion }
+                                    puntuacion={califSeleccion}
                                 />
 
                                 <ScoreCard
                                     titulo="Orden"
-                                    puntuacion={ califOrden }
+                                    puntuacion={califOrden}
                                 />
 
                                 <ScoreCard
                                     titulo="Limpieza"
-                                    puntuacion={ califLimpieza }
+                                    puntuacion={califLimpieza}
                                 />
 
                                 <ScoreCard
                                     titulo="Estandar"
-                                    puntuacion={ califEstandar }
+                                    puntuacion={califEstandar}
                                 />
 
                                 <ScoreCard
                                     titulo="Sostener"
-                                    puntuacion={ califSostener }
+                                    puntuacion={califSostener}
                                 />
 
                                 <FinalScore
-                                    puntuacion={ resultadoFinal }
+                                    puntuacion={resultadoFinal}
                                 />
                             </div>
                         </div>
-                        <div className="flex justify-between gap-">                                
+                        <div className="flex justify-between gap-">
                             <div className="bg-gray-50 px-6 py-4 flex justify-center border-t border-gray-200">
                                 <button
-                                    onClick={ handleBack }
+                                    onClick={handleBack}
                                     className="items-center px-3 py-1 border border-transparent text-base
                                         font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700
                                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 hover:cursor-pointer
@@ -217,14 +220,14 @@ const ProduccionResultadoFinalPage = () => {
                                 >
                                     Volver
                                 </button>
-                                
+
                                 <button
-                                    onClick={ sendDataToBackend }
+                                    onClick={sendDataToBackend}
                                     className="items-center px-3 py-1 border border-transparent text-base
                                         font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700
                                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:cursor-pointer
                                     "
-                                >                                            
+                                >
                                     Guardar los resultados
                                 </button>
                             </div>

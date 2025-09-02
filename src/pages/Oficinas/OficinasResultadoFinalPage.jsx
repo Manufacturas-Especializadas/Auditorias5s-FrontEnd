@@ -35,7 +35,10 @@ const OficinasResultadoFinalPage = () => {
     }, [setAuditType]);
 
     const calcularCalificacion = (respuestas) => {
-        return Object.values(respuestas).reduce((sum, val) => sum + (val || 0) * 0.2, 0);
+        return Object.values(respuestas).reduce((sum, val) => {
+            const score = parseInt(val, 10) || 0;
+            return sum + (score * 20);
+        }, 0);
     };
 
     const califSeleccion = calcularCalificacion(respuestasSecciones.seleccion);
@@ -44,7 +47,7 @@ const OficinasResultadoFinalPage = () => {
     const califEstandar = calcularCalificacion(respuestasSecciones.estandar);
     const califSostener = calcularCalificacion(respuestasSecciones.sostener);
 
-    const resultadoFinal = (califSeleccion + califOrden + califLimpieza + califEstandar + califSostener) * 0.2;
+    const resultadoFinal = (califSeleccion + califOrden + califLimpieza + califEstandar + califSostener);
 
     const getResponsesToSend = () => {
         const answers = [];
@@ -62,7 +65,7 @@ const OficinasResultadoFinalPage = () => {
         answers.push(...processSection(respuestasSecciones.limpieza));
         answers.push(...processSection(respuestasSecciones.estandar));
         answers.push(...processSection(respuestasSecciones.sostener));
-    
+
         console.log("Respuestas formateadas para enviar:", answers);
         return answers;
     };
@@ -78,7 +81,7 @@ const OficinasResultadoFinalPage = () => {
         }
 
         const invalidAnswers = answers.filter(a => a.score < 1 || a.score > 5);
-        
+
         if (invalidAnswers.length > 0) {
             Swal.fire({
                 icon: "error",
@@ -96,7 +99,7 @@ const OficinasResultadoFinalPage = () => {
 
         if (!validateAllAnswered(answers)) return;
 
-        if(auditorData.photoRefs?.length > 10){
+        if (auditorData.photoRefs?.length > 10) {
             Swal.fire({
                 icon: "warning",
                 title: "Demasiadas fotos",
@@ -167,7 +170,7 @@ const OficinasResultadoFinalPage = () => {
                         </h1>
                         <p className="text-blue-100 text-center mt-1">
                             Resumen de calificaciones por categoría
-                        </p>                        
+                        </p>
                     </div>
 
                     <div className="bg-white shadow-xl rounded-b-xl overflow-hidden divide-y divide-gray-200">
@@ -175,38 +178,38 @@ const OficinasResultadoFinalPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <ScoreCard
                                     titulo="Selección"
-                                    puntuacion={ califSeleccion }
+                                    puntuacion={califSeleccion}
                                 />
 
                                 <ScoreCard
                                     titulo="Orden"
-                                    puntuacion={ califOrden }
+                                    puntuacion={califOrden}
                                 />
 
                                 <ScoreCard
                                     titulo="Limpieza"
-                                    puntuacion={ califLimpieza }
+                                    puntuacion={califLimpieza}
                                 />
 
                                 <ScoreCard
                                     titulo="Estandar"
-                                    puntuacion={ califEstandar }
+                                    puntuacion={califEstandar}
                                 />
 
                                 <ScoreCard
                                     titulo="Sostener"
-                                    puntuacion={ califSostener }
+                                    puntuacion={califSostener}
                                 />
 
                                 <FinalScore
-                                    puntuacion={ resultadoFinal }
+                                    puntuacion={resultadoFinal}
                                 />
                             </div>
                         </div>
-                        <div className="flex justify-between gap-">                                
+                        <div className="flex justify-between gap-">
                             <div className="bg-gray-50 px-6 py-4 flex justify-center border-t border-gray-200">
                                 <button
-                                    onClick={ handleBack }
+                                    onClick={handleBack}
                                     className="items-center px-3 py-1 border border-transparent text-base
                                         font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700
                                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 hover:cursor-pointer
@@ -215,14 +218,14 @@ const OficinasResultadoFinalPage = () => {
                                 >
                                     Volver
                                 </button>
-                                
+
                                 <button
-                                    onClick={ sendDataToBackend }
+                                    onClick={sendDataToBackend}
                                     className="items-center px-3 py-1 border border-transparent text-base
                                         font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700
                                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:cursor-pointer
                                     "
-                                >                                            
+                                >
                                     Guardar los resultados
                                 </button>
                             </div>

@@ -8,13 +8,13 @@ import ScoreCard from "../../components/ScoreCard/ScoreCard";
 import FinalScore from "../../components/FinalScore/FinalScore";
 
 const PerifericasResultadoFinalPage = () => {
-    const { 
+    const {
         auditState,
         AUDIT_TYPES,
         setAuditType,
         clearAllData
     } = useContext(AuditoriaContext);
-    
+
     const { auditorData, respuestasSecciones } = auditState[AUDIT_TYPES.PERIFERICOS] || {
         auditorData: {},
         respuestasSecciones: {
@@ -30,14 +30,17 @@ const PerifericasResultadoFinalPage = () => {
 
     useEffect(() => {
         setAuditType(AUDIT_TYPES.PERIFERICOS);
-        
+
         console.log("Datos completos:", auditState);
         console.log("Datos de periféricos:", auditState[AUDIT_TYPES.PERIFERICOS]);
     }, [setAuditType]);
 
 
     const calcularCalificacion = (respuestas) => {
-        return Object.values(respuestas).reduce((sum, val) => sum + (val || 0) * 0.2, 0);
+        return Object.values(respuestas).reduce((sum, val) => {
+            const score = parseInt(val, 10) || 0;
+            return sum + (score * 20);
+        }, 0);
     };
 
     const califSeleccion = calcularCalificacion(respuestasSecciones.seleccion);
@@ -46,7 +49,7 @@ const PerifericasResultadoFinalPage = () => {
     const califEstandar = calcularCalificacion(respuestasSecciones.estandar);
     const califSostener = calcularCalificacion(respuestasSecciones.sostener);
 
-    const resultadoFinal = (califSeleccion + califOrden + califLimpieza + califEstandar + califSostener) * 0.2;
+    const resultadoFinal = (califSeleccion + califOrden + califLimpieza + califEstandar + califSostener);
 
     const getResponsesToSend = () => {
         const answers = [];
@@ -79,7 +82,7 @@ const PerifericasResultadoFinalPage = () => {
         }
 
         const invalidAnswers = answers.filter(a => a.score < 1 || a.score > 5);
-        
+
         if (invalidAnswers.length > 0) {
             Swal.fire({
                 icon: "error",
@@ -97,7 +100,7 @@ const PerifericasResultadoFinalPage = () => {
 
         // if(!validateAllAnswered(answers)) return;
 
-        if(auditorData.photoRefs?.length > 10){
+        if (auditorData.photoRefs?.length > 10) {
             Swal.fire({
                 icon: "warning",
                 title: "Demasiadas fotos",
@@ -117,7 +120,7 @@ const PerifericasResultadoFinalPage = () => {
             formData.append('IdPeripheralArea', auditorData.selectedAreaId);
             formData.append('Description', auditorData.description || "");
             formData.append('IdForm', '2');
-            
+
             formData.append('Answers', JSON.stringify(answers));
 
             if (auditorData.photoRefs?.length > 0) {
@@ -138,7 +141,7 @@ const PerifericasResultadoFinalPage = () => {
 
             await clearAllData();
             await swalInstance.close();
-            
+
             Swal.fire({
                 icon: "success",
                 title: "¡Auditoría guardada!",
@@ -146,7 +149,7 @@ const PerifericasResultadoFinalPage = () => {
                 timer: 2000,
                 showConfirmButton: false
             }).then(() => navigate("/"));
-            
+
         } catch (error) {
             Swal.fire({
                 icon: "error",
@@ -170,7 +173,7 @@ const PerifericasResultadoFinalPage = () => {
                         </h1>
                         <p className="text-blue-100 text-center mt-1">
                             Resumen de calificaciones por categoría
-                        </p>                        
+                        </p>
                     </div>
 
                     <div className="bg-white shadow-xl rounded-b-xl overflow-hidden divide-y divide-gray-200">
@@ -178,38 +181,38 @@ const PerifericasResultadoFinalPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <ScoreCard
                                     titulo="Selección"
-                                    puntuacion={ califSeleccion }
+                                    puntuacion={califSeleccion}
                                 />
 
                                 <ScoreCard
                                     titulo="Orden"
-                                    puntuacion={ califOrden }
+                                    puntuacion={califOrden}
                                 />
 
                                 <ScoreCard
                                     titulo="Limpieza"
-                                    puntuacion={ califLimpieza }
+                                    puntuacion={califLimpieza}
                                 />
 
                                 <ScoreCard
                                     titulo="Estandar"
-                                    puntuacion={ califEstandar }
+                                    puntuacion={califEstandar}
                                 />
 
                                 <ScoreCard
                                     titulo="Sostener"
-                                    puntuacion={ califSostener }
+                                    puntuacion={califSostener}
                                 />
 
                                 <FinalScore
-                                    puntuacion={ resultadoFinal }
+                                    puntuacion={resultadoFinal}
                                 />
                             </div>
                         </div>
-                        <div className="flex justify-between gap-">                                
+                        <div className="flex justify-between gap-">
                             <div className="bg-gray-50 px-6 py-4 flex justify-center border-t border-gray-200">
                                 <button
-                                    onClick={ handleBack }
+                                    onClick={handleBack}
                                     className="items-center px-3 py-1 border border-transparent text-base
                                         font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700
                                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 hover:cursor-pointer
@@ -218,14 +221,14 @@ const PerifericasResultadoFinalPage = () => {
                                 >
                                     Volver
                                 </button>
-                                
+
                                 <button
-                                    onClick={ sendDataToBackend }
+                                    onClick={sendDataToBackend}
                                     className="items-center px-3 py-1 border border-transparent text-base
                                         font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700
                                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:cursor-pointer
                                     "
-                                >                                            
+                                >
                                     Guardar los resultados
                                 </button>
                             </div>
