@@ -13,6 +13,6 @@ export const PreguntasProduccionSostenerData = [
     },
     {
         id: 22,
-        texto: "Se obtuvo un mayor porcentaje de calificación que en la anterior auditoría"
+        texto: "Estaciones solo cuentan con artículos necesarios para el desempeño del trabajo"
     }
 ];
